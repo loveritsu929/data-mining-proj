@@ -380,7 +380,9 @@ def val(model, processor, args, label_list, tokenizer, device):
         input_mask = input_mask.to(device)
         segment_ids = segment_ids.to(device)
         label_ids = label_ids.to(device)
- 
+        
+        #TODO: print accuracy
+        
         with torch.no_grad():
             logits = model(input_ids, segment_ids, input_mask)         
             pred = logits.max(1)[1]
@@ -389,12 +391,13 @@ def val(model, processor, args, label_list, tokenizer, device):
 
         logits = logits.detach().cpu().numpy()
         label_ids = label_ids.to('cpu').numpy()
+        acc = accuracy(logits, label_ids)
 
     print(len(gt))
     f1 = np.mean(metrics.f1_score(predict, gt, average=None))
     print(f1)
 
-    return f1
+    return f1, acc
 
 
 def test(model, processor, args, label_list, tokenizer, device):
@@ -459,12 +462,12 @@ def main():
                         #required = True,
                         help = "The input data dir. Should contain the .tsv files (or other data files) for the task.")
     parser.add_argument("--bert_model",
-                        default = 'bert-large-uncased',
+                        default = './bert-model/uncased_L-24_H-1024_A-16',
                         type = str,
                         #required = True,
                         help = "choose bert model.")
     parser.add_argument("--task_name",
-                        default = 'MyPro',
+                        default = 'mypro',
                         type = str,
                         #required = True,
                         help = "The name of the task to train.")
@@ -497,7 +500,7 @@ def main():
                         action = 'store_true',
                         help = "英文字符的大小写转换，对于中文来说没啥用")
     parser.add_argument("--train_batch_size",
-                        default = 12, #128
+                        default = 32, #128
                         type = int,
                         help = "训练时batch大小")
     parser.add_argument("--eval_batch_size",
@@ -554,17 +557,18 @@ def main():
 
     # 对模型输入进行处理的processor，git上可能都是针对英文的processor
     processors = {'mypro': MyProcessor}
-
-    if args.local_rank == -1 or args.no_cuda:
-        device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
-        n_gpu = torch.cuda.device_count()
-    else:
-        device = torch.device("cuda", args.local_rank)
-        n_gpu = 1
-        torch.distributed.init_process_group(backend='nccl')
-        if args.fp16:
-            logger.info("16-bits training currently not supported in distributed training") 
-            args.fp16 = False # (see https://github.com/pytorch/pytorch/pull/13496)
+    device = torch.device('cuda')
+    n_gpu = torch.cuda.device_count()
+#    if args.local_rank == -1 or args.no_cuda:
+#        device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
+#        n_gpu = torch.cuda.device_count()
+#    else:
+#        device = torch.device("cuda", args.local_rank)
+#        n_gpu = 1
+#        torch.distributed.init_process_group(backend='nccl')
+#        if args.fp16:
+#            logger.info("16-bits training currently not supported in distributed training") 
+#            args.fp16 = False # (see https://github.com/pytorch/pytorch/pull/13496)
     logger.info("device %s n_gpu %d distributed training %r", device, n_gpu, bool(args.local_rank != -1))
 
     if args.gradient_accumulation_steps < 1:
@@ -604,8 +608,10 @@ def main():
             len(train_examples) / args.train_batch_size / args.gradient_accumulation_steps * args.num_train_epochs)
 
     # Prepare model
-    model = BertForSequenceClassification.from_pretrained(args.bert_model, 
-                cache_dir=PYTORCH_PRETRAINED_BERT_CACHE / 'distributed_{}'.format(args.local_rank))
+#    model = BertForSequenceClassification.from_pretrained(args.bert_model, 
+#                cache_dir=PYTORCH_PRETRAINED_BERT_CACHE / 'distributed_{}'.format(args.local_rank))
+    model = BertForSequenceClassification.from_pretrained(args.bert_model, from_tf = False,
+                cache_dir='./bert-model/cache/distributed_{}'.format(args.local_rank))
 
     if args.fp16:
     	model.half()
@@ -695,17 +701,17 @@ def main():
                         optimizer.step()
                     model.zero_grad()
     
-            f1 = val(model, processor, args, label_list, tokenizer, device)
+            f1, acc = val(model, processor, args, label_list, tokenizer, device)
             if f1 > best_score:
                 best_score = f1
-                print('*f1 score = {}'.format(f1))
+                print('*f1 score = {} acc = {}'.format(f1, acc))
                 flags = 0
                 checkpoint = {
                     'state_dict': model.state_dict()
                 }
                 torch.save(checkpoint, args.model_save_pth)
             else:
-                print('f1 score = {}'.format(f1))
+                print('f1 score = {} acc = {}'.format(f1, acc))
                 flags += 1
                 if flags >=6:
                     break
