@@ -139,11 +139,11 @@ class MyProcessor(DataProcessor):
             
     def get_train_examples(self, data_dir):
         return self._create_examples(
-            self._read_csv(os.path.join(data_dir, "train.csv")), 'train')
+            self._read_csv(os.path.join(data_dir, "myTrain.csv")), 'train')
 
     def get_dev_examples(self, data_dir):
         return self._create_examples(
-            self._read_csv(os.path.join(data_dir, "dev.csv")), 'dev')
+            self._read_csv(os.path.join(data_dir, "myDev.csv")), 'dev')
 
     def get_test_examples(self, data_dir):
         return self._create_examples(
