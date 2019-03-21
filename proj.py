@@ -123,6 +123,8 @@ class MyProcessor(DataProcessor):
                 guid = eglist[2]
                 text_a = eglist[0]
                 #label = self._get_label(eglist[1])
+                
+                # use the original string label
                 label = eglist[1]
                 examples.append(
                         InputExample(guid=guid, text_a=text_a, label=label))
@@ -140,11 +142,11 @@ class MyProcessor(DataProcessor):
             
     def get_train_examples(self, data_dir):
         return self._create_examples(
-            self._read_csv(os.path.join(data_dir, "myTrain.csv")), 'train')[1:33]
+            self._read_csv(os.path.join(data_dir, "myTrain.csv")), 'train')#[:1000]
 
     def get_dev_examples(self, data_dir):
         return self._create_examples(
-            self._read_csv(os.path.join(data_dir, "myDev.csv")), 'dev')
+            self._read_csv(os.path.join(data_dir, "myDev.csv")), 'dev')#[:30]
 
     def get_test_examples(self, data_dir):
         return self._create_examples(
@@ -390,7 +392,7 @@ def val(model, processor, args, label_list, tokenizer, device):
             pred = logits.max(1)[1]
             predict = np.hstack((predict, pred.cpu().numpy()))
             gt = np.hstack((gt, label_ids.cpu().numpy()))
-
+            #print(pred): 1 sample each time	
         logits = logits.detach().cpu().numpy()
         label_ids = label_ids.to('cpu').numpy()
         #acc = accuracy(logits, label_ids)
@@ -398,11 +400,21 @@ def val(model, processor, args, label_list, tokenizer, device):
 
     f1 = np.mean(metrics.f1_score(predict, gt, average=None))
     # gt&predict:1-D size=5000, vector
+    # print(type(predict))
+    
+    #print(predict)
     preds = torch.as_tensor(predict)
+    #print(preds)
+    #print(type(gt))
+    #print(gt)
+    #print(preds)
     labels = torch.as_tensor(gt)
+    #print(labels)
     corrects = torch.sum(preds==labels)
-    acc = corrects*1.0 / len(gt)
-
+    #print('corrects = {}'.format(corrects))
+    acc = corrects.double() / len(gt)
+    #print('acc in val = {}, numSamples = {}'.format(acc, len(gt)))
+    
     return f1, acc
 
 
@@ -477,13 +489,13 @@ def main():
                         type = str,
                         #required = True,
                         help = "The name of the task to train.")
-    parser.add_argument("--output_dir",
-                        default = 'checkpoint_2/',
-                        type = str,
-                        #required = True,
-                        help = "The output directory where the model checkpoints will be written")
+#    parser.add_argument("--output_dir",
+#                        default = 'checkpoint_2/',
+#                        type = str,
+#                        #required = True,
+#                        help = "The output directory where the model checkpoints will be written")
     parser.add_argument("--model_save_pth",
-                        default = 'checkpoints/bert_classification.pth',
+                        default = 'checkpoint_2/bert_classification.pth',
                         type = str,
                         #required = True,
                         help = "The output directory where the model checkpoints will be written")
@@ -506,7 +518,7 @@ def main():
                         action = 'store_true',
                         help = "英文字符的大小写转换，对于中文来说没啥用")
     parser.add_argument("--train_batch_size",
-                        default = 8, #128
+                        default = 32, #128
                         type = int,
                         help = "训练时batch大小")
     parser.add_argument("--eval_batch_size",
@@ -514,7 +526,7 @@ def main():
                         type = int,
                         help = "验证时batch大小")
     parser.add_argument("--learning_rate",
-                        default = 3e-5,
+                        default = 5e-5,
                         type = float,
                         help = "Adam初始学习步长")
     parser.add_argument("--num_train_epochs",
@@ -708,6 +720,7 @@ def main():
                     model.zero_grad()
     
             f1, acc = val(model, processor, args, label_list, tokenizer, device)
+            print('Stats: ')
             if f1 > best_score:
                 best_score = f1
                 print('*f1 score = {} acc = {}'.format(f1, acc))
