@@ -142,15 +142,15 @@ class MyProcessor(DataProcessor):
             
     def get_train_examples(self, data_dir):
         return self._create_examples(
-            self._read_csv(os.path.join(data_dir, "myTrain.csv")), 'train')#[:1000]
+            self._read_csv(os.path.join(data_dir, "myTrain_cleaned.csv")), 'train')#[:1000]
 
     def get_dev_examples(self, data_dir):
         return self._create_examples(
-            self._read_csv(os.path.join(data_dir, "myDev.csv")), 'dev')#[:30]
+            self._read_csv(os.path.join(data_dir, "myDev_cleaned.csv")), 'dev')#[:30]
 
     def get_test_examples(self, data_dir):
         return self._create_examples(
-            self._read_csv(os.path.join(data_dir, "test.csv")), 'test')
+            self._read_csv(os.path.join(data_dir, "test_cleaned.csv")), 'test')
 
     def get_labels(self):
         #return [2,1,0]
@@ -489,11 +489,11 @@ def main():
                         type = str,
                         #required = True,
                         help = "The name of the task to train.")
-#    parser.add_argument("--output_dir",
-#                        default = 'checkpoint_2/',
-#                        type = str,
-#                        #required = True,
-#                        help = "The output directory where the model checkpoints will be written")
+    parser.add_argument("--output_dir",
+                        default = 'checkpoint_2/',
+                        type = str,
+                        #required = True,
+                        help = "The output directory where the model checkpoints will be written")
     parser.add_argument("--model_save_pth",
                         default = 'checkpoint_2/bert_classification.pth',
                         type = str,
