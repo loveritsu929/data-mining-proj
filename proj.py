@@ -140,7 +140,7 @@ class MyProcessor(DataProcessor):
             
     def get_train_examples(self, data_dir):
         return self._create_examples(
-            self._read_csv(os.path.join(data_dir, "myTrain.csv")), 'train')
+            self._read_csv(os.path.join(data_dir, "myTrain.csv")), 'train')[1:33]
 
     def get_dev_examples(self, data_dir):
         return self._create_examples(
@@ -506,7 +506,7 @@ def main():
                         action = 'store_true',
                         help = "英文字符的大小写转换，对于中文来说没啥用")
     parser.add_argument("--train_batch_size",
-                        default = 32, #128
+                        default = 8, #128
                         type = int,
                         help = "训练时batch大小")
     parser.add_argument("--eval_batch_size",
