@@ -122,14 +122,15 @@ class MyProcessor(DataProcessor):
             for eglist in ds:
                 guid = eglist[2]
                 text_a = eglist[0]
-                label = self._get_label(eglist[1])
+                #label = self._get_label(eglist[1])
+                label = eglist[1]
                 examples.append(
                         InputExample(guid=guid, text_a=text_a, label=label))
         elif set_type == 'test':
             for eglist in ds:
                 guid = eglist[0]
                 text_a = eglist[1]
-                label = 0
+                label = 'neutral'
                 examples.append(
                         InputExample(guid=guid, text_a=text_a, label=label))
         else:
@@ -139,7 +140,7 @@ class MyProcessor(DataProcessor):
             
     def get_train_examples(self, data_dir):
         return self._create_examples(
-            self._read_csv(os.path.join(data_dir, "myTrain.csv")), 'train')
+            self._read_csv(os.path.join(data_dir, "myDev.csv")), 'train')
 
     def get_dev_examples(self, data_dir):
         return self._create_examples(
@@ -150,7 +151,8 @@ class MyProcessor(DataProcessor):
             self._read_csv(os.path.join(data_dir, "test.csv")), 'test')
 
     def get_labels(self):
-        return [2,1,0]
+        #return [2,1,0]
+        return ['positive','neutral','negative']
     
 #class MyPro(DataProcessor):
 #    '''自定义数据读取方法，针对json文件
@@ -391,12 +393,16 @@ def val(model, processor, args, label_list, tokenizer, device):
 
         logits = logits.detach().cpu().numpy()
         label_ids = label_ids.to('cpu').numpy()
-        acc = accuracy(logits, label_ids)
+        #acc = accuracy(logits, label_ids)
+        acc = 0
 
-    print(len(gt))
+    #print(len(gt))
     f1 = np.mean(metrics.f1_score(predict, gt, average=None))
-    print(f1)
-
+    #print(f1)
+    pred.size()    
+    print(pred)
+    label_ids.shape
+    print(label_ids)
     return f1, acc
 
 
@@ -472,7 +478,7 @@ def main():
                         #required = True,
                         help = "The name of the task to train.")
     parser.add_argument("--output_dir",
-                        default = 'checkpoints/',
+                        default = 'checkpoint_2/',
                         type = str,
                         #required = True,
                         help = "The output directory where the model checkpoints will be written")
@@ -508,7 +514,7 @@ def main():
                         type = int,
                         help = "验证时batch大小")
     parser.add_argument("--learning_rate",
-                        default = 5e-5,
+                        default = 3e-5,
                         type = float,
                         help = "Adam初始学习步长")
     parser.add_argument("--num_train_epochs",
