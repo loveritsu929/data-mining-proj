@@ -140,7 +140,7 @@ class MyProcessor(DataProcessor):
             
     def get_train_examples(self, data_dir):
         return self._create_examples(
-            self._read_csv(os.path.join(data_dir, "myDev.csv")), 'train')
+            self._read_csv(os.path.join(data_dir, "myTrain.csv")), 'train')
 
     def get_dev_examples(self, data_dir):
         return self._create_examples(
@@ -394,15 +394,15 @@ def val(model, processor, args, label_list, tokenizer, device):
         logits = logits.detach().cpu().numpy()
         label_ids = label_ids.to('cpu').numpy()
         #acc = accuracy(logits, label_ids)
-        acc = 0
+        
 
-    #print(len(gt))
     f1 = np.mean(metrics.f1_score(predict, gt, average=None))
-    #print(f1)
-    pred.size()    
-    print(pred)
-    label_ids.shape
-    print(label_ids)
+    # gt&predict:1-D size=5000, vector
+    preds = torch.as_tensor(predict)
+    labels = torch.as_tensor(gt)
+    corrects = torch.sum(preds==labels)
+    acc = corrects*1.0 / len(gt)
+
     return f1, acc
 
 
