@@ -155,38 +155,6 @@ class MyProcessor(DataProcessor):
     def get_labels(self):
         #return [2,1,0]
         return ['positive','neutral','negative']
-    
-#class MyPro(DataProcessor):
-#    '''自定义数据读取方法，针对json文件
-#    
-#    Returns:
-#        examples: 数据集，包含index、中文文本、类别三个部分
-#    '''
-#    def get_train_examples(self, data_dir):
-#        return self._create_examples(
-#            self._read_json(os.path.join(data_dir, "train.json")), 'train')
-#
-#    def get_dev_examples(self, data_dir):
-#        return self._create_examples(
-#            self._read_json(os.path.join(data_dir, "val.json")), 'dev')
-#
-#    def get_test_examples(self, data_dir):
-#        return self._create_examples(
-#            self._read_json(os.path.join(data_dir, "test.json")), 'test')
-#
-#    def get_labels(self):
-#        return [0, 1]
-#
-#    def _create_examples(self, dicts, set_type):
-#        examples = []
-#        for (i, infor) in enumerate(dicts):
-#            guid = "%s-%s" % (set_type, i)
-#            text_a = infor['question']
-#            label = infor['label']
-#            examples.append(
-#                InputExample(guid=guid, text_a=text_a, label=label))
-#        return examples
-
 
 def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer, show_exp=True):
     '''Loads a data file into a list of `InputBatch`s.
