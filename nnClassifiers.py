@@ -11,6 +11,7 @@ import torch.nn as nn
 import torch.utils.data as data
 import torch.optim as optim
 import numpy as np
+import matplotlib.pyplot as plt
 
 #hyperparameters
 lnR = 0.001
@@ -126,6 +127,13 @@ optimizer = optim.Adam(model.parameters(), lr = lnR, amsgrad = True)
 #train and validata
 best_model_wts = copy.deepcopy(model.state_dict())
 best_acc = 0.0
+loss_dict = {}
+loss_dict['train'] = []
+loss_dict['dev'] = []
+acc_dict = {}
+acc_dict['train'] = []
+acc_dict['dev'] = []
+
 
 print('Start training, using dataset: {}'.format(file_abbr))
 print('NN structure: ')
@@ -164,11 +172,14 @@ for epoch in range(numEpoch):
                     
             running_loss += loss.item() * sample.size(0)
             running_corrects += torch.sum(preds == label.data)           
-            print('Epoch {} Iteration {}: running_corrects: {} running loss = {}'.format(epoch+1,i,running_corrects,running_loss))
+            print('Epoch {} Iteration {}: running_corrects: {} running loss = {:4f}'.format(epoch+1,i,running_corrects,running_loss))
             
         epoch_loss = running_loss / len(datasets[phase])
         epoch_acc = running_corrects.double() / len(datasets[phase])
+        loss_dict[phase].append(epoch_loss)
+        acc_dict[phase].append(epoch_acc)
         print('{} Loss: {:.4f} Acc: {:.4f}'.format(phase, epoch_loss, epoch_acc))
+        print(' ')
         
         #save the best model
         if phase == 'dev' and epoch_acc > best_acc:
@@ -176,3 +187,16 @@ for epoch in range(numEpoch):
             best_model_wts = copy.deepcopy(model.state_dict())
             torch.save(model.state_dict(), os.path.join('./my-models', 'bestmodel_{}.mdl'.format(file_abbr)))
 print('Finish Training, Best val Acc: {:4f}'.format(best_acc))
+
+#plot
+x = list(range(1, numEpoch+1))
+plt.figure(file_abbr)
+plt.subplot(2, 2, 1).set_title('train loss')
+plt.plot(x, loss_dict['train'])
+plt.subplot(2, 2, 2).set_title('train acc')
+plt.plot(x, acc_dict['train'], color = 'red',marker='+', linestyle='dashed')
+plt.subplot(2, 2, 3).set_title('dev loss')
+plt.plot(x, loss_dict['dev'])
+plt.subplot(2, 2, 4).set_title('dev acc')
+plt.plot(x, acc_dict['dev'], color = 'red',marker='+', linestyle='dashed')
+plt.show()
