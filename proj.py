@@ -153,8 +153,8 @@ class MyProcessor(DataProcessor):
             self._read_csv(os.path.join(data_dir, "test_cleaned.csv")), 'test')
 
     def get_labels(self):
-        #return [2,1,0]
-        return ['positive','neutral','negative']
+        #return [0, 1, 2]
+        return ['negative', 'neutral', 'positive']
 
 def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer, show_exp=True):
     '''Loads a data file into a list of `InputBatch`s.
@@ -400,6 +400,7 @@ def test(model, processor, args, label_list, tokenizer, device):
     Returns:
         f1: F1值
     '''
+    #output_labels = []
     test_examples = processor.get_test_examples(args.data_dir)
     test_features = convert_examples_to_features(
         test_examples, label_list, args.max_seq_length, tokenizer)
@@ -432,8 +433,10 @@ def test(model, processor, args, label_list, tokenizer, device):
 
     f1 = np.mean(metrics.f1_score(predict, gt, average=None))
     print('F1 score in text set is {}'.format(f1))
+    
+    preds = predict
 
-    return f1
+    return f1, preds
 
 
 def main():
@@ -652,6 +655,7 @@ def main():
 
         model.train()
         best_score = 0
+        best_acc = 0
         flags = 0
         for _ in trange(int(args.num_train_epochs), desc="Epoch"):
             for step, batch in enumerate(tqdm(train_dataloader, desc="Iteration")):
@@ -702,9 +706,14 @@ def main():
                 flags += 1
                 if flags >=6:
                     break
+            
+            if acc > best_acc:
+                best_acc = acc
 
     model.load_state_dict(torch.load(args.model_save_pth)['state_dict'])
-    test(model, processor, args, label_list, tokenizer, device)
+    _, preds = test(model, processor, args, label_list, tokenizer, device)
+    np.save('output_ids', preds)
+    print('Finish; Best acc={}'.format(best_acc))
 	
 
 if __name__ == '__main__':
