@@ -97,13 +97,16 @@ class MyNN(nn.Module):
         else:
             print('invalid dimension!')
         
-        self.dropout = nn.Dropout(p = 0.2)
+        self.dropout = nn.Dropout(p = 0.5)
         self.relu = nn.LeakyReLU()
         
     def forward(self, x):
         
         h = self.fc1(x)
         h = self.relu(h)
+        
+        h = self.dropout(h)
+        
         h = self.fc2(h)
         h = self.relu(h)
         
