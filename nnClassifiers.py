@@ -14,8 +14,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 #hyperparameters
-lnR = 0.001
-numEpoch = 200
+lnR = 1e-4
+numEpoch = 2000
 
 file_abbr = sys.argv[1]
 starting_idx = {'glove50': 54,'glove100': 104, 'glove200': 204, 'bert1024': 1028}

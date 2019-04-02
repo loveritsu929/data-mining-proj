@@ -4,8 +4,8 @@ import spacy
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-glove_size = 200
-glove_file = './glove/glove.twitter.27B.200d.txt'
+glove_size = 100
+glove_file = './glove/glove.twitter.27B.100d.txt'
 word_vocabulary = [None]
 #word_embedding = [[0.0] * glove_size]
 word_count = {}
@@ -104,7 +104,7 @@ test_ids = [item[0] for item in test]
 test_labels = ['neutral'] * 10000# fake labels
 
 #word count
-for sent in train_sents:
+for sent in train_sents + dev_sents + test_sents:
     for token in spacy_nlp(sent):
         #word_count[token.text] = word_count[token.text] + 1 if token.text in word_count else 1
         word_count[token.text] = word_count[token.text] + 1 if token.text in word_count else 1
@@ -122,7 +122,7 @@ for word in sorted(word_count, key=word_count.get, reverse=True):
 
 #compute TF-IDF
 vectorizer = TfidfVectorizer(stop_words = None, tokenizer=None, min_df=1, lowercase=True, vocabulary = word_vocabulary)
-tfidf = vectorizer.fit_transform(train_sents) 
+tfidf = vectorizer.fit_transform(train_sents + dev_sents + test_sents)
 tfidf_array = tfidf.toarray()
 #print(tfidf)
 #print(tfidf.toarray())
