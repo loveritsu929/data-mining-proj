@@ -1,4 +1,6 @@
 # data-mining-proj
+Baoqi Yu, Bochao Wang, Chenxing Zheng
+
 A text classification task.
 
 Sentence embedding: TF-IDF weighted average of glove word vectors / Google's bert sentence embedding
